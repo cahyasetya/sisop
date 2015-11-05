@@ -6,11 +6,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-//int pid_background[20];
-
-void do_background(){
-}
-
 void do_the_job(char **cmd, int bg){
 	int p_pid, i;
 	p_pid = fork();
