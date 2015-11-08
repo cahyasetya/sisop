@@ -12,6 +12,7 @@ typedef struct{
 struct file{
 	char in[25];
 	char out[25];
+	pthread_t *t;
 };
 
 void *cek(void *args){
@@ -51,11 +52,34 @@ void cari_prima_input(){
     free(t);
 }
 
-void *membaca_menulis(void *filedesc){
+void *thread2(void *arg){
+    struct file *args=(struct file*)arg;
+    FILE *in, *out;
+    if(strcmp(args->in, args->out) != 0){
+        in = fopen(args->in, "r");
+		out = fopen(args->out, "w");
+
+		char c=fgetc(in);
+
+		while(c != EOF) {
+			fputc(c, out);
+			c = fgetc(in);
+		}
+		fclose(in);
+		fclose(out);
+	}
+}
+
+void *thread1(void *filedesc){
 	FILE *infile, *outfile;
+	struct file *file2=malloc(sizeof(struct file));
 	struct file *fdesc = (struct file*) filedesc;
 	char temp;
-	
+	printf("\n\tNama file Output ke-2 dari hasil menyalin : \n\t-");
+    scanf("%c", &temp);
+    scanf("%[^\n]", file2->out);
+    strcpy(file2->in,fdesc->out);
+
 	//use normal c function
 	//File yang input dan outputnya sama langsung return.
 	if(strcmp(fdesc->in, fdesc->out) != 0){
@@ -63,7 +87,7 @@ void *membaca_menulis(void *filedesc){
 		infile = fopen(fdesc->in, "r");
 
 		temp = fgetc(infile);
-
+        pthread_create(fdesc->t, NULL, thread2, file2);
 		while(temp != EOF) {
 			fputc(temp, outfile);
 			temp = fgetc(infile);
@@ -71,7 +95,7 @@ void *membaca_menulis(void *filedesc){
 		fclose(outfile);
 		fclose(infile);
 	}
-	
+
 	//use bash command
 	//execl("/bin/cp", "/bin/cp", fdesc->in, fdesc->out, (char *)0);
 }
@@ -84,29 +108,21 @@ void menu_membaca(){
 	printf("\n\tInputkan file yang akan disalin : \n\t-");
 	scanf("%c", &temp);
 	scanf("%[^\n]", temp2);
-	
-	//check file
-	check = fopen(temp2,"r");
-	
-	if(check == NULL){
+
+	if(fopen(temp2,"r") == NULL){
 		printf("\n\tFile source yang disalin tidak ditemukan. Penyalinan gagal.\n");
 	}else{
-		fclose(check);
-
 		struct file *file1 = malloc(sizeof(struct file));
 		struct file *file2 = malloc(sizeof(struct file));
-		
+
 		strcpy(file1->in,temp2);
 		printf("\n\tNama file Output ke-1 dari hasil menyalin : \n\t-");
 		scanf("%c", &temp);
 		scanf("%[^\n]", file1->out);
-		printf("\n\tNama file Output ke-2 dari hasil menyalin : \n\t-");
-		scanf("%c", &temp);
-		scanf("%[^\n]", file2->out);
-		strcpy(file2->in,file1->out);
+		file1->t=&t2;
 
-		pthread_create(&t1, NULL, membaca_menulis, file1);
-		pthread_create(&t2, NULL, membaca_menulis, file2);
+		pthread_create(&t1, NULL, thread1, file1);
+		pthread_join(t1, NULL);
 		pthread_join(t2, NULL);
 		free(file1);
 		free(file2);
@@ -119,7 +135,7 @@ int menu(){
 	printf("\t1) Mencari bilangan prima kurang dari N.\n");
 	printf("\t2) Multithread untuk menyalin isi file.\n");
 	printf("\t9) Exit.\n\n\t-");
-	
+
 	scanf("%d", &pilih);
 	return pilih;
 }
