@@ -11,15 +11,18 @@ void do_the_job(char **cmd, int bg){
 	p_pid = fork();
 
 	if(bg == 1){
-		if(p_pid == 0){ //Kalau pake ini output nggak keluar dilayar sama sekali, tapi tampilan shellnya kacau
+		if(p_pid == 0){ 
 			close(STDIN_FILENO); 
 			close(STDOUT_FILENO);
 			close(STDERR_FILENO);
 			execvp(cmd[0], cmd);
+			fprintf(stderr,"\n");			
 		}
 	}
 	else if(p_pid == 0) execvp(cmd[0], cmd);
-	else wait(0);
+	else {
+		waitpid(p_pid, &i, 0);
+	}
 }
 
 void change_direction(char *cmd_run[]){
@@ -27,11 +30,20 @@ void change_direction(char *cmd_run[]){
 	else chdir("..");
 }
 
+void ignore(int signal){
+	char *username, hostname[100], cwd[1024];
+	gethostname(hostname,100);
+        username = getlogin();
+	getcwd(cwd, sizeof(cwd));
+
+	fprintf(stderr,"\n\x1b[31m%s@%s \x1b[34m%s &: \x1b[0m", username, hostname, cwd);
+}
+
 int main(){
 	char *username, hostname[100], cwd[1024], cmd[1024], *cmd_run[50];
 	int i, bg = 0;
-	signal(SIGINT, SIG_IGN);
-	//SIGSTOP cannot be ignored
+	signal(SIGINT, ignore);
+	signal(SIGTSTP, ignore);
 
 	while(1){
 		gethostname(hostname,100);
