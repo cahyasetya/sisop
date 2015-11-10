@@ -12,6 +12,12 @@ void do_the_job(char **cmd, int bg){
 
 	if(bg == 1){
 		if(p_pid == 0){ 
+			//Bila ingin hasil background proses tampil di file
+			/*FILE *FD = fopen("bgresult.txt","a");
+			fprintf(FD, "-PID : %d\n",getpid());
+			dup2(fileno(FD), STDOUT_FILENO);
+   			fclose(FD);*/
+
 			close(STDIN_FILENO); 
 			close(STDOUT_FILENO);
 			close(STDERR_FILENO);
