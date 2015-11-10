@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+int belumtulis=1;
+int terminated=0;
+
 typedef struct{
     int input;
     int *counter;
@@ -53,10 +56,13 @@ void cari_prima_input(){
 }
 
 void *thread2(void *arg){
-    struct file *args=(struct file*)arg;
-    FILE *in, *out;
-    if(strcmp(args->in, args->out) != 0){
-        in = fopen(args->in, "r");
+	while(belumtulis){
+		if(terminated)return;
+	}
+    	struct file *args=(struct file*)arg;
+    	FILE *in, *out;
+    	if(strcmp(args->in, args->out) != 0){
+        	in = fopen(args->in, "r");
 		out = fopen(args->out, "w");
 
 		char c=fgetc(in);
@@ -72,13 +78,8 @@ void *thread2(void *arg){
 
 void *thread1(void *filedesc){
 	FILE *infile, *outfile;
-	struct file *file2=malloc(sizeof(struct file));
 	struct file *fdesc = (struct file*) filedesc;
 	char temp;
-	printf("\n\tNama file Output ke-2 dari hasil menyalin : \n\t-");
-    scanf("%c", &temp);
-    scanf("%[^\n]", file2->out);
-    strcpy(file2->in,fdesc->out);
 
 	//use normal c function
 	//File yang input dan outputnya sama langsung return.
@@ -87,13 +88,14 @@ void *thread1(void *filedesc){
 		infile = fopen(fdesc->in, "r");
 
 		temp = fgetc(infile);
-        pthread_create(fdesc->t, NULL, thread2, file2);
+		belumtulis=0;
 		while(temp != EOF) {
 			fputc(temp, outfile);
 			temp = fgetc(infile);
 		};
 		fclose(outfile);
 		fclose(infile);
+		terminated=1;
 	}
 
 	//use bash command
@@ -119,10 +121,13 @@ void menu_membaca(){
 		printf("\n\tNama file Output ke-1 dari hasil menyalin : \n\t-");
 		scanf("%c", &temp);
 		scanf("%[^\n]", file1->out);
-		file1->t=&t2;
+		printf("\n\tNama file Output ke-2 dari hasil menyalin : \n\t-");
+		scanf("%c", &temp);
+		scanf("%[^\n]", file2->out);
+		strcpy(file2->in,file1->out);
 
 		pthread_create(&t1, NULL, thread1, file1);
-		pthread_join(t1, NULL);
+		pthread_create(&t2, NULL, thread2, file2);
 		pthread_join(t2, NULL);
 		free(file1);
 		free(file2);
