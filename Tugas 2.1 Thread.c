@@ -56,14 +56,16 @@ void cari_prima_input(){
 }
 
 void *thread2(void *arg){
+    struct file *args=(struct file*)arg;
+    FILE *in, *out;
+    if(fopen(args->in, "r")){
+        in = fopen(args->in, "r");
+		out = fopen(args->out, "w");
+    }
 	while(belumtulis){
 		if(terminated)return;
 	}
-    	struct file *args=(struct file*)arg;
-    	FILE *in, *out;
     	if(strcmp(args->in, args->out) != 0){
-        	in = fopen(args->in, "r");
-		out = fopen(args->out, "w");
 
 		char c=fgetc(in);
 
