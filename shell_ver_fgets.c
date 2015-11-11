@@ -13,7 +13,9 @@ void do_the_job(char **cmd, int bg){
 	if(p_pid == 0){ 
 		execvp(cmd[0], cmd);			
 	}
-	else if(bg == 0) waitpid(p_pid, &i, 0);
+	else if(bg == 0){ 
+		waitpid(p_pid, &i, 0);
+	}
 }
 
 void change_direction(char *cmd_run[]){
@@ -50,33 +52,26 @@ int main(){
 		printf("\x1b[31m%s@%s \x1b[34m%s &: \x1b[0m", username, hostname, cwd);
 
 		if(fgets(cmd, sizeof(cmd), stdin) == NULL) break;
-		if(cmd[strlen(cmd)-1] == '\n') cmd[strlen(cmd)-1] = '\0';
+
+		length = strlen(cmd);
+		if(cmd[length-1] == '\n') cmd[length-1] = '\0';
+		if(cmd[length-2] == '&'){ 
+			bg = 1;
+			cmd[length-2] = '\0';
+		}
 
 		cmd_run[0] = strtok(cmd, " ");
 		if(cmd_run[0] == NULL) continue;
 		
 		for(i = 1; i < 100; i++){
 			cmd_run[i] = strtok(NULL, " ");
-			if(cmd_run[i] == NULL){
-				strcpy(temp, cmd_run[i-1]);
-				length = strlen(temp);
-
-				if(length != 1 && temp[length-1] == '&'){
-					temp[length-1] = '\0';
-					strcpy(cmd_run[i-1],temp);
-					bg = 1;
-				}else if(strcmp(cmd_run[i-1], "&") == 0){
-					cmd_run[i-1] = NULL;
-					bg = 1;
-				}
-				break;
-			}
+			if(cmd_run[i] == NULL) break;
 		}
 
 		if(strcmp(cmd_run[0], "cd") == 0) change_direction(cmd_run);
 		else if (strcmp(cmd_run[0],"exit") == 0) break;
 		else do_the_job(cmd_run, bg);
+		
 		bg = 0;
 	}
-	printf("\n");
 }
